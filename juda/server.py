@@ -153,9 +153,9 @@ def make_handler(assistant: Assistant, users: UserStore):
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(description="JUDA prototip sunucusu")
-    parser.add_argument("--host", default="127.0.0.1")
-    parser.add_argument("--port", type=int, default=8765)
-    parser.add_argument("--data-dir", default="data")
+    parser.add_argument("--host", default=os.environ.get("JUDA_HOST", "127.0.0.1"))
+    parser.add_argument("--port", type=int, default=int(os.environ.get("JUDA_PORT", "8765")))
+    parser.add_argument("--data-dir", default=os.environ.get("JUDA_DATA_DIR", "data"))
     args = parser.parse_args(argv)
 
     assistant, users = build_assistant(args.data_dir)
