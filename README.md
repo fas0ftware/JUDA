@@ -1,66 +1,68 @@
 # JUDA
 
-Evdeki teknolojileri telefondan kontrol etmek için akıllı ev dijital asistanı. Bu sürüm bir **PoC / prototip**: cihazlar simüle edilir, komutlar Türkçe yazılır, arayüz telefon tarayıcısında açılır. Sadece Python standart kütüphanesini kullanır (kurulum gerekmez).
+A smart home digital assistant for controlling home technologies from your phone. This version is a **proof of concept / prototype**: devices are simulated, commands are typed in Turkish, and the UI runs in a phone browser. It uses only the Python standard library (nothing to install).
 
-## Çalıştırma
+## Running
 
 ```bash
 python3 -m juda                      # http://127.0.0.1:8765
-python3 -m juda --host 0.0.0.0       # aynı ağdaki telefondan erişmek için
-python3 -m juda --port 9000 --data-dir /yol/veri
+python3 -m juda --host 0.0.0.0       # to reach it from a phone on the same network
+python3 -m juda --port 9000 --data-dir /path/to/data
 ```
 
-İlk çalıştırmada `data/users.json` oluşur ve her kullanıcı için bir erişim anahtarı (token) konsola yazılır. Arayüzde bu anahtarla giriş yapılır. `data/` klasörü `.gitignore` içindedir; tokenları paylaşma.
+On first run, `data/users.json` is created and an access token for each user is printed to the console. Log in to the UI with one of these tokens. The `data/` folder is listed in `.gitignore`; do not share the tokens.
 
-`--host 0.0.0.0` kullanırsan sunucu yerel ağdaki herkese açılır ve trafik şifresizdir (HTTP). Bunu sadece güvendiğin ağda kullan.
+If you use `--host 0.0.0.0`, the server is open to everyone on your local network and traffic is unencrypted (plain HTTP). Only use it on a network you trust.
 
-## Neler yapabilir
+## What it can do
 
-| Komut örneği | Etkisi |
+The assistant understands Turkish commands:
+
+| Example command | Effect |
 |---|---|
-| `salon ışığını aç` / `mutfağı kapat` | oda ışığı aç/kapat |
-| `tüm ışıkları kapat` | hepsi |
-| `yatak odası ışığını %40 yap` | parlaklık |
-| `klimayı 23 derece yap`, `evi ısıt`, `salonu soğut` | klima (10–30 °C) |
-| `kapıyı kilitle` / `kapıyı aç` | kapı kilidi |
-| `kapı kilitli mi?`, `durum` | durum sorgusu |
-| `eve geldim`, `çıkıyorum`, `iyi geceler` | sahneler |
-| `bana şu script için kod yaz` | anlaşılmayan/ağır iş → Daedalus'a devir |
+| `salon ışığını aç` / `mutfağı kapat` | turn a room's light on/off |
+| `tüm ışıkları kapat` | all lights |
+| `yatak odası ışığını %40 yap` | set brightness |
+| `klimayı 23 derece yap`, `evi ısıt`, `salonu soğut` | air conditioner (10–30 °C) |
+| `kapıyı kilitle` / `kapıyı aç` | door lock / unlock |
+| `kapı kilitli mi?`, `durum` | status queries |
+| `eve geldim`, `çıkıyorum`, `iyi geceler` | scenes (arrive, leave, night) |
+| `bana şu script için kod yaz` | unrecognized or heavy task → handed off to Daedalus |
 
-## Roller
+## Roles
 
-- **admin**: her şey, kayıtları ve Daedalus görevlerini görür.
-- **family**: günlük cihaz kontrolü; kapı kilidini **açamaz**, Daedalus'a iş gönderemez.
-- **guest**: sadece durum sorabilir.
+- **admin**: can do everything; can view the event log and Daedalus tasks.
+- **family**: everyday device control; **cannot** unlock the door and cannot send tasks to Daedalus.
+- **guest**: can only ask for status.
 
-## Daedalus ile ilişki
+## Relationship with Daedalus
 
-JUDA basit ev işlerini yapar, zor işleri Daedalus'a devreder. İki sistem bağlam/hafıza paylaşmaz: devirde sadece görev metni ve isteyen kullanıcının adı gider. Şimdilik Daedalus bir stub'dır (`juda/router.py`), görevleri `data/handoffs.jsonl` dosyasına yazar. Gerçek entegrasyon için `DaedalusClient` arayüzünü (`submit`, `list_tasks`) sağlayan bir sınıf yeterli.
+JUDA handles simple home tasks and hands hard tasks over to Daedalus. The two systems do not share context or memory: a handoff carries only the task text and the name of the requesting user. For now Daedalus is a stub (`juda/router.py`) that writes tasks to `data/handoffs.jsonl`. A real integration only needs a class that implements the `DaedalusClient` interface (`submit`, `list_tasks`).
 
-## Yapı
+## Project layout
 
 ```
-juda/devices.py   simüle cihazlar + durum makinesi + kalıcılık (data/state.json)
-juda/nlu.py       kural tabanlı Türkçe komut ayrıştırıcı
-juda/users.py     roller, yetkiler, token doğrulama
-juda/core.py      komut -> niyet -> yetki -> cihaz; sahneler; olay kaydı
-juda/router.py    Daedalus devri (stub)
-juda/server.py    HTTP API + arayüz (stdlib)
-juda/static/      telefon uyumlu arayüz
-tests/            birim ve sunucu testleri
+juda/devices.py   simulated devices + state machine + persistence (data/state.json)
+juda/nlu.py       rule-based Turkish command parser
+juda/users.py     roles, permissions, token authentication
+juda/core.py      command -> intent -> permission check -> devices; scenes; event log
+juda/router.py    handoff to Daedalus (stub)
+juda/server.py    HTTP API + UI server (stdlib only)
+juda/static/      phone-friendly web UI
+tests/            unit and server tests
 ```
 
-API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `POST /api/device {"id", "action", "value"}`, `GET /api/log` (admin), `GET /api/handoffs` (admin). Hepsi `Authorization: Bearer <token>` ister.
+API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `POST /api/device {"id", "action", "value"}`, `GET /api/log` (admin), `GET /api/handoffs` (admin). All endpoints require an `Authorization: Bearer <token>` header.
 
-## Test
+## Tests
 
 ```bash
 python3 -m unittest discover -s tests -t .
 ```
 
-## Bilinen sınırlar / sonraki adımlar
+## Known limitations / next steps
 
-- Cihazlar simüle; gerçek entegrasyon (MQTT, Zigbee, Tuya, Home Assistant vb.) yok.
-- Ayrıştırıcı kural tabanlı: bilinen kalıpları anlar, serbest cümlelerde Daedalus'a düşer. Zamanlama ("akşam 8'de aç") yok.
-- Kullanıcı yönetimi sadece dosyadan; arayüzden kullanıcı ekleme yok.
-- HTTP üzerinden çalışır; evin dışından erişim için TLS ve ters proxy gerekir.
+- Devices are simulated; there is no real integration yet (MQTT, Zigbee, Tuya, Home Assistant, etc.).
+- The parser is rule-based: it understands known patterns, and free-form sentences fall through to Daedalus. There is no scheduling (e.g. "turn on at 8 pm").
+- User management is file-based only; there is no way to add users from the UI.
+- It runs over plain HTTP; access from outside the home would require TLS and a reverse proxy.
