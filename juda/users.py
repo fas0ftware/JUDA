@@ -74,10 +74,14 @@ class UserStore:
     def authenticate(self, token: str | None) -> User | None:
         if not token:
             return None
+        # Bayt olarak karşılaştır: hmac.compare_digest, ASCII dışı karakter içeren
+        # str değerlerde TypeError verir; başlıktaki "é" gibi bir token sunucuyu
+        # çökertmemeli, sadece 401 almalı.
+        candidate = token.encode("utf-8", "surrogateescape")
         found: User | None = None
         for name, info in self._users.items():
             # Tüm kayıtlar taranır; zamanlama farkı token'ı sızdırmaz.
-            if hmac.compare_digest(info["token"], token):
+            if hmac.compare_digest(info["token"].encode("utf-8"), candidate):
                 found = User(name=name, role=info["role"])
         return found
 

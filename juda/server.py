@@ -21,6 +21,20 @@ from .users import User, UserStore, can_view_log
 STATIC_DIR = Path(__file__).parent / "static"
 MAX_BODY = 64 * 1024
 
+# Her yanıta eklenir: tarayıcının içeriği tahmin etmesini, sayfanın çerçeveye
+# alınmasını ve adresin başka sitelere sızmasını engeller.
+SECURITY_HEADERS = {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer",
+}
+# Arayüz tek dosya (satır içi script ve stil) ve yalnızca aynı sunucuya istek atar.
+PAGE_CSP = (
+    "default-src 'none'; script-src 'self' 'unsafe-inline'; "
+    "style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; "
+    "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+)
+
 
 def build_assistant(data_dir: str) -> tuple[Assistant, UserStore]:
     os.makedirs(data_dir, exist_ok=True)
@@ -36,12 +50,17 @@ def make_handler(assistant: Assistant, users: UserStore):
         server_version = "JUDA/0.1"
 
         # --- yardımcılar -------------------------------------------------
+        def _send_security_headers(self) -> None:
+            for name, value in SECURITY_HEADERS.items():
+                self.send_header(name, value)
+
         def _send_json(self, status: int, payload) -> None:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "no-store")
+            self._send_security_headers()
             self.end_headers()
             self.wfile.write(body)
 
@@ -74,6 +93,8 @@ def make_handler(assistant: Assistant, users: UserStore):
                 self.send_response(200)
                 self.send_header("Content-Type", "text/html; charset=utf-8")
                 self.send_header("Content-Length", str(len(body)))
+                self.send_header("Content-Security-Policy", PAGE_CSP)
+                self._send_security_headers()
                 self.end_headers()
                 self.wfile.write(body)
                 return

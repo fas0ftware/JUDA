@@ -1,4 +1,5 @@
 import json
+import socket
 import tempfile
 import threading
 import unittest
@@ -90,6 +91,31 @@ class ServerTests(unittest.TestCase):
 
     def test_unknown_path(self):
         self.assertEqual(self.call("GET", "/api/yok", token=self.admin)[0], 404)
+
+    def test_non_ascii_token_gets_401_not_a_dropped_connection(self):
+        # Regression: hmac.compare_digest raised TypeError for non-ASCII str tokens,
+        # which killed the handler thread and closed the connection without a reply.
+        host, port = self.server.server_address
+        request = ("GET /api/me HTTP/1.1\r\nHost: x\r\nAuthorization: Bearer é-token\r\n"
+                   "Connection: close\r\n\r\n").encode("latin-1")
+        with socket.create_connection((host, port), timeout=5) as sock:
+            sock.sendall(request)
+            reply = b""
+            while chunk := sock.recv(4096):
+                reply += chunk
+        self.assertTrue(reply.startswith(b"HTTP/1.0 401") or reply.startswith(b"HTTP/1.1 401"), reply[:40])
+
+    def test_security_headers(self):
+        for path in ("/", "/api/me"):
+            with self.subTest(path=path):
+                req = urllib.request.Request(self.base + path)
+                req.add_header("Authorization", f"Bearer {self.admin}")
+                with urllib.request.urlopen(req) as resp:
+                    self.assertEqual(resp.headers["X-Content-Type-Options"], "nosniff")
+                    self.assertEqual(resp.headers["X-Frame-Options"], "DENY")
+                    self.assertEqual(resp.headers["Referrer-Policy"], "no-referrer")
+        with urllib.request.urlopen(self.base + "/") as resp:
+            self.assertIn("frame-ancestors 'none'", resp.headers["Content-Security-Policy"])
 
 
 if __name__ == "__main__":

@@ -54,11 +54,20 @@ tests/            unit and server tests
 
 API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `POST /api/device {"id", "action", "value"}`, `GET /api/log` (admin), `GET /api/handoffs` (admin). All endpoints require an `Authorization: Bearer <token>` header.
 
+## Security notes
+
+- Tokens are random (192 bit), compared in constant time, and stored in `data/users.json` with file mode `0600`. A malformed token, including one with non-ASCII characters, simply gets `401`.
+- Request bodies are limited to 64 KB.
+- Every response carries `X-Content-Type-Options`, `X-Frame-Options` and `Referrer-Policy`; the UI page also carries a `Content-Security-Policy` that only allows the page's own script and requests to the same server.
+- Traffic is plain HTTP; see the warning above about `--host 0.0.0.0`.
+
 ## Tests
 
 ```bash
 python3 -m unittest discover -s tests -t .
 ```
+
+The same command runs on every push through GitHub Actions.
 
 ## Known limitations / next steps
 
