@@ -1,0 +1,96 @@
+import json
+import tempfile
+import threading
+import unittest
+import urllib.error
+import urllib.request
+from http.server import ThreadingHTTPServer
+
+from juda.server import build_assistant, make_handler
+
+
+class ServerTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.tmp = tempfile.TemporaryDirectory()
+        assistant, users = build_assistant(cls.tmp.name)
+        cls.assistant = assistant
+        tokens = users.tokens()
+        cls.admin = tokens["yonetici"][1]
+        cls.family = tokens["aile"][1]
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), make_handler(assistant, users))
+        cls.base = f"http://127.0.0.1:{cls.server.server_address[1]}"
+        cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
+        cls.thread.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.server.shutdown()
+        cls.server.server_close()
+        cls.tmp.cleanup()
+
+    def call(self, method, path, token=None, body=None, raw=None):
+        data = raw if raw is not None else (json.dumps(body).encode() if body is not None else None)
+        req = urllib.request.Request(self.base + path, data=data, method=method)
+        if token:
+            req.add_header("Authorization", f"Bearer {token}")
+        if data is not None:
+            req.add_header("Content-Type", "application/json")
+            req.add_header("Content-Length", str(len(data)))
+        try:
+            with urllib.request.urlopen(req) as resp:
+                return resp.status, resp.read()
+        except urllib.error.HTTPError as err:
+            return err.code, err.read()
+
+    def test_index_page_is_public(self):
+        status, body = self.call("GET", "/")
+        self.assertEqual(status, 200)
+        self.assertIn(b"JUDA", body)
+
+    def test_api_requires_token(self):
+        self.assertEqual(self.call("GET", "/api/devices")[0], 401)
+        self.assertEqual(self.call("GET", "/api/devices", token="yanlis")[0], 401)
+        self.assertEqual(self.call("POST", "/api/command", body={"text": "durum"})[0], 401)
+
+    def test_devices_and_me(self):
+        status, body = self.call("GET", "/api/devices", token=self.admin)
+        self.assertEqual(status, 200)
+        self.assertEqual(len(json.loads(body)["devices"]), 8)
+        status, body = self.call("GET", "/api/me", token=self.family)
+        self.assertEqual(json.loads(body)["role"], "family")
+
+    def test_command_roundtrip(self):
+        status, body = self.call("POST", "/api/command", token=self.admin, body={"text": "mutfak ışığını aç"})
+        self.assertEqual(status, 200)
+        self.assertTrue(json.loads(body)["ok"])
+        self.assertTrue(self.assistant.home.get("kitchen_light").state["on"])
+
+    def test_family_cannot_unlock_over_api(self):
+        status, body = self.call("POST", "/api/device", token=self.family,
+                                 body={"id": "front_door", "action": "unlock"})
+        self.assertEqual(status, 200)
+        self.assertFalse(json.loads(body)["ok"])
+        self.assertTrue(self.assistant.home.get("front_door").state["locked"])
+
+    def test_log_is_admin_only(self):
+        self.assertEqual(self.call("GET", "/api/log", token=self.family)[0], 403)
+        self.assertEqual(self.call("GET", "/api/log", token=self.admin)[0], 200)
+        self.assertEqual(self.call("GET", "/api/handoffs", token=self.family)[0], 403)
+
+    def test_bad_bodies(self):
+        self.assertEqual(self.call("POST", "/api/command", token=self.admin, raw=b"{bozuk")[0], 400)
+        self.assertEqual(self.call("POST", "/api/command", token=self.admin, body={"text": 5})[0], 400)
+        self.assertEqual(self.call("POST", "/api/command", token=self.admin, body=["x"])[0], 400)
+        self.assertEqual(self.call("POST", "/api/device", token=self.admin, body={"id": "x"})[0], 400)
+
+    def test_oversized_body_rejected(self):
+        big = json.dumps({"text": "a" * 70000}).encode()
+        self.assertEqual(self.call("POST", "/api/command", token=self.admin, raw=big)[0], 400)
+
+    def test_unknown_path(self):
+        self.assertEqual(self.call("GET", "/api/yok", token=self.admin)[0], 404)
+
+
+if __name__ == "__main__":
+    unittest.main()

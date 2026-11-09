@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+# Çalışma zamanı verisi: tokenlar, cihaz durumu, kayıtlar
+data/
+*.log
+.env
