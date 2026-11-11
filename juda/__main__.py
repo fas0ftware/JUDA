@@ -1,3 +1,5 @@
+import sys
+
 from .server import main
 
-main()
+sys.exit(main())

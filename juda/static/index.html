@@ -67,6 +67,7 @@
     </section>
 
     <section class="card" id="devices"></section>
+    <section class="card hidden" id="schedules"></section>
     <button class="ghost" id="logout">Çıkış</button>
   </div>
 </main>
@@ -78,7 +79,7 @@
   var $ = function (id) { return document.getElementById(id); };
   var role = null;
 
-  var SUGGESTIONS = ["Eve geldim", "Tüm ışıkları kapat", "Klimayı 23 derece yap", "Kapıyı kilitle", "Durum", "İyi geceler"];
+  var SUGGESTIONS = ["Eve geldim", "Tüm ışıkları kapat", "Klimayı 23 derece yap", "Kapıyı kilitle", "Durum", "İyi geceler", "Saat 23:00'te tüm ışıkları kapat"];
 
   function api(method, path, body) {
     var opts = { method: method, headers: { "Authorization": "Bearer " + token } };
@@ -141,7 +142,35 @@
     });
   }
 
+  function renderSchedules(list) {
+    var box = $("schedules");
+    box.textContent = "";
+    box.classList.toggle("hidden", list.length === 0);
+    if (list.length === 0) return;
+    var title = document.createElement("div"); title.className = "name"; title.textContent = "Zamanlamalar";
+    box.appendChild(title);
+    list.forEach(function (j) {
+      var row = document.createElement("div"); row.className = "dev";
+      var left = document.createElement("div");
+      var name = document.createElement("div"); name.className = "name";
+      name.textContent = "#" + j.id + " " + j.text;  // textContent: user text is never parsed as HTML
+      var st = document.createElement("div"); st.className = "state";
+      st.textContent = (j.daily ? "her gün, " : "") + "sıradaki: " + j.next_run + " · " + j.user;
+      left.appendChild(name); left.appendChild(st);
+      var btn = document.createElement("button"); btn.className = "ghost"; btn.textContent = "İptal";
+      btn.addEventListener("click", function () {
+        btn.disabled = true;
+        api("DELETE", "/api/schedules/" + encodeURIComponent(j.id)).then(refresh);
+      });
+      row.appendChild(left); row.appendChild(btn);
+      box.appendChild(row);
+    });
+  }
+
   function refresh() {
+    api("GET", "/api/schedules").then(function (r) {
+      if (r.status === 200) renderSchedules(r.data.schedules || []);
+    });
     return api("GET", "/api/devices").then(function (r) {
       if (r.status === 401) { logout(); return; }
       renderDevices(r.data.devices || []);

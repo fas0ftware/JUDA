@@ -10,6 +10,7 @@ from collections import deque
 from dataclasses import dataclass, field
 
 from . import nlu
+from . import schedule as sched
 from .devices import Device, Home, describe_state
 from .router import DaedalusClient
 from .users import User, can_control, can_handoff
@@ -18,7 +19,9 @@ HELP_TEXT = (
     "Şunları yapabilirim: ışıkları açıp kapatmak (\"salon ışığını aç\"), parlaklık ayarlamak "
     "(\"yatak odası ışığını %40 yap\"), klima ayarlamak (\"klimayı 23 derece yap\"), kapıyı "
     "kilitlemek (\"kapıyı kilitle\"), durum sormak (\"kapı kilitli mi?\") ve sahneler: "
-    "\"eve geldim\", \"çıkıyorum\", \"iyi geceler\". Ağır işleri Daedalus'a iletirim."
+    "\"eve geldim\", \"çıkıyorum\", \"iyi geceler\". Zamanlama: \"saat 22:30'da ışıkları kapat\", "
+    "\"10 dakika sonra mutfağı kapat\", \"her gün 07:00'de salon ışığını aç\"; \"zamanlamalar\" ile listele, "
+    "\"zamanlama 2 iptal\" ile sil. Ağır işleri Daedalus'a iletirim."
 )
 
 SCENE_STEPS = {
@@ -53,9 +56,13 @@ class Reply:
 
 
 class Assistant:
-    def __init__(self, home: Home, daedalus: DaedalusClient, log_path: str | None = None):
+    def __init__(self, home: Home, daedalus: DaedalusClient, log_path: str | None = None,
+                 scheduler: sched.Scheduler | None = None, user_lookup=None, clock=time.time):
         self.home = home
         self.daedalus = daedalus
+        self.scheduler = scheduler
+        self._user_lookup = user_lookup  # name -> User | None, used when a scheduled job runs
+        self._clock = clock
         self._log_path = log_path
         self._log: deque[dict] = deque(maxlen=200)
         self._log_lock = threading.Lock()
@@ -67,6 +74,11 @@ class Assistant:
             return self._finish(text, user, Reply("Bir şey söylemedin.", ok=False))
         if len(text) > 500:
             return self._finish(text, user, Reply("Komut çok uzun; 500 karakterin altında tut.", ok=False))
+
+        if self.scheduler is not None:
+            scheduled = self._schedule_command(text, user)
+            if scheduled is not None:
+                return self._finish(text, user, scheduled)
 
         intent = nlu.parse(text)
         if intent.kind == "help":
@@ -167,6 +179,66 @@ class Assistant:
             return Reply("Bunu anlayamadım. Daedalus'a iş iletmek sadece yöneticiye açık.", ok=False)
         task_id = self.daedalus.submit(text, user.name)
         return Reply(f"Bu işi Daedalus'a ilettim (görev {task_id}).", handoff_id=task_id)
+
+    # --- zamanlama --------------------------------------------------------
+    def _schedule_command(self, text: str, user: User) -> Reply | None:
+        """Zamanlama listele / iptal / oluştur. Zaman ifadesi yoksa None."""
+        is_admin = user.role == "admin"
+        if sched.LIST_WORDS.match(text):
+            jobs = self.scheduler.list(None if is_admin else user.name)
+            if not jobs:
+                return Reply("Bekleyen zamanlama yok.")
+            lines = [f"#{j.id} {j.label} → {j.text} ({j.user})" for j in jobs]
+            return Reply("Zamanlamalar: " + "; ".join(lines))
+        if sched.CANCEL_ALL.search(text):
+            n = self.scheduler.cancel_all(user.name, is_admin)
+            return Reply(f"{n} zamanlama iptal edildi." if n else "İptal edilecek zamanlama yok.", ok=bool(n))
+        m = sched.CANCEL_ONE.search(text)
+        if m:
+            job_id = int(m.group(1) or m.group(3))
+            if self.scheduler.cancel(job_id, user.name, is_admin):
+                return Reply(f"Zamanlama #{job_id} iptal edildi.")
+            return Reply(f"#{job_id} numaralı (senin) bir zamanlama bulamadım.", ok=False)
+
+        spec, rest = sched.split_time(text, self._clock())
+        if spec is None:
+            return None
+        if not rest:
+            return Reply("Zamanı anladım ama ne yapacağımı söylemedin.", ok=False)
+        intent = nlu.parse(rest)
+        if intent.kind not in ("device", "scene"):
+            return Reply("Sadece cihaz komutları ve sahneler zamanlanabilir, örneğin "
+                         "\"saat 23:00'te ışıkları kapat\".", ok=False)
+        if intent.kind == "device":
+            devices, problem = self._select(intent)
+            if problem:
+                return Reply(problem, ok=False)
+            denied = [d.name for d in devices if not can_control(user.role, d.kind, intent.action)]
+            if denied:
+                return Reply("Bunu zamanlayamazsın, yetkin yok: " + ", ".join(denied) + ".", ok=False)
+        elif user.role == "guest":
+            return Reply("Misafirler sahne zamanlayamaz.", ok=False)
+        try:
+            job = self.scheduler.add(user.name, user.role, rest, spec)
+        except ValueError as exc:
+            return Reply(str(exc), ok=False)
+        return Reply(f"Tamam, {spec.label}: \"{rest}\" (zamanlama #{job.id}).")
+
+    def run_job(self, job: sched.Job) -> Reply | None:
+        """Zamanı gelen işi, kullanıcının *şu anki* rolüyle çalıştırır."""
+        user = self._user_lookup(job.user) if self._user_lookup else User(job.user, job.role)
+        if user is None:
+            self._finish(f"[zamanlama #{job.id}] {job.text}", User(job.user, "removed"),
+                         Reply("Kullanıcı artık yok, zamanlama çalıştırılmadı.", ok=False))
+            return None
+        intent = nlu.parse(job.text)
+        if intent.kind == "scene":
+            reply = self._scene(intent, user)
+        elif intent.kind == "device":
+            reply = self._device(intent, user)
+        else:
+            reply = Reply("Zamanlanmış komut artık anlaşılmıyor.", ok=False)
+        return self._finish(f"[zamanlama #{job.id}] {job.text}", user, reply)
 
     # --- kayıt -----------------------------------------------------------
     def _finish(self, text: str, user: User, reply: Reply) -> Reply:

@@ -118,5 +118,25 @@ class ServerTests(unittest.TestCase):
             self.assertIn("frame-ancestors 'none'", resp.headers["Content-Security-Policy"])
 
 
+    def test_server_header_hides_python_version(self):
+        req = urllib.request.Request(self.base + "/")
+        with urllib.request.urlopen(req) as resp:
+            self.assertTrue(resp.headers["Server"].startswith("JUDA/"))
+            self.assertNotIn("Python", resp.headers["Server"])
+
+    def test_schedule_api(self):
+        status, body = self.call("POST", "/api/command", self.family, {"text": "30 dakika sonra mutfağı kapat"})
+        self.assertEqual(status, 200)
+        self.assertIn("zamanlama #", json.loads(body)["text"])
+        status, body = self.call("GET", "/api/schedules", self.family)
+        jobs = json.loads(body)["schedules"]
+        self.assertEqual(status, 200)
+        self.assertEqual(jobs[-1]["text"], "mutfağı kapat")
+        job_id = jobs[-1]["id"]
+        self.assertEqual(self.call("DELETE", f"/api/schedules/{job_id}")[0], 401)
+        self.assertEqual(self.call("DELETE", "/api/schedules/abc", self.family)[0], 400)
+        self.assertEqual(self.call("DELETE", f"/api/schedules/{job_id}", self.family)[0], 200)
+        self.assertEqual(self.call("DELETE", f"/api/schedules/{job_id}", self.family)[0], 404)
+
 if __name__ == "__main__":
     unittest.main()
