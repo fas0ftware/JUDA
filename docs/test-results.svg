@@ -1,64 +1,53 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="931" height="1090" viewBox="0 0 931 1090">
+<svg xmlns="http://www.w3.org/2000/svg" width="842" height="892" viewBox="0 0 842 892">
 <rect width="100%" height="100%" rx="10" fill="#0d1117" stroke="#30363d"/>
 <rect width="100%" height="32" rx="10" fill="#161b22"/><rect y="22" width="100%" height="10" fill="#161b22"/>
 <circle cx="18" cy="16" r="6" fill="#ff5f56"/><circle cx="38" cy="16" r="6" fill="#ffbd2e"/><circle cx="58" cy="16" r="6" fill="#27c93f"/>
-<text x="466" y="21" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" text-anchor="middle">JUDA — unittest</text>
+<text x="421" y="21" fill="#8b949e" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="12" text-anchor="middle">JUDA — unittest</text>
 <g font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,monospace" font-size="13" xml:space="preserve">
 <text x="14" y="56" fill="#58a6ff">$ python -m unittest discover -s tests -t . -v</text>
-<text x="14" y="74" fill="#e6edf3">test_admin_can_unlock_and_family_can_lock (tests.test_core.AssistantTests.test_admin_can_unlock_and_family_...</text>
+<text x="14" y="74" fill="#e6edf3">test_admin_can_unlock_and_family_can_lock (tests.test_core.AssistantTests.test_admin_can_unlock_and_fam…</text>
 <text x="14" y="92" fill="#3fb950">test_all_lights_off (tests.test_core.AssistantTests.test_all_lights_off) ... ok</text>
-<text x="14" y="110" fill="#e6edf3">test_arrive_scene_turns_on_hall_and_living_room (tests.test_core.AssistantTests.test_arrive_scene_turns_on_...</text>
+<text x="14" y="110" fill="#e6edf3">test_arrive_scene_turns_on_hall_and_living_room (tests.test_core.AssistantTests.test_arrive_scene_turns…</text>
 <text x="14" y="128" fill="#3fb950">test_empty_and_too_long_input (tests.test_core.AssistantTests.test_empty_and_too_long_input) ... ok</text>
 <text x="14" y="146" fill="#3fb950">test_event_log_written (tests.test_core.AssistantTests.test_event_log_written) ... ok</text>
 <text x="14" y="164" fill="#3fb950">test_family_cannot_unlock_door (tests.test_core.AssistantTests.test_family_cannot_unlock_door) ... ok</text>
-<text x="14" y="182" fill="#e6edf3">test_guest_cannot_control_but_can_ask (tests.test_core.AssistantTests.test_guest_cannot_control_but_can_ask...</text>
-<text x="14" y="200" fill="#e6edf3">test_handoff_carries_only_task_and_user (tests.test_core.AssistantTests.test_handoff_carries_only_task_and_...</text>
+<text x="14" y="182" fill="#e6edf3">test_guest_cannot_control_but_can_ask (tests.test_core.AssistantTests.test_guest_cannot_control_but_can…</text>
+<text x="14" y="200" fill="#e6edf3">test_handoff_carries_only_task_and_user (tests.test_core.AssistantTests.test_handoff_carries_only_task_…</text>
 <text x="14" y="218" fill="#3fb950">test_handoff_only_for_admin (tests.test_core.AssistantTests.test_handoff_only_for_admin) ... ok</text>
-<text x="14" y="236" fill="#3fb950">test_leave_scene (tests.test_core.AssistantTests.test_leave_scene) ... ok</text>
-<text x="14" y="254" fill="#3fb950">test_light_without_room_asks_which (tests.test_core.AssistantTests.test_light_without_room_asks_which) ... ok</text>
-<text x="14" y="272" fill="#e6edf3">test_scene_reports_denied_steps_for_family (tests.test_core.AssistantTests.test_scene_reports_denied_steps_...</text>
-<text x="14" y="290" fill="#3fb950">test_status_text (tests.test_core.AssistantTests.test_status_text) ... ok</text>
-<text x="14" y="308" fill="#3fb950">test_thermostat (tests.test_core.AssistantTests.test_thermostat) ... ok</text>
-<text x="14" y="326" fill="#e6edf3">test_thermostat_out_of_range_is_reported (tests.test_core.AssistantTests.test_thermostat_out_of_range_is_re...</text>
-<text x="14" y="344" fill="#3fb950">test_turn_on_room_light (tests.test_core.AssistantTests.test_turn_on_room_light) ... ok</text>
-<text x="14" y="362" fill="#e6edf3">test_ui_control_respects_permissions (tests.test_core.AssistantTests.test_ui_control_respects_permissions) ...</text>
-<text x="14" y="380" fill="#3fb950">test_bool_is_not_a_number (tests.test_core.HomeTests.test_bool_is_not_a_number) ... ok</text>
-<text x="14" y="398" fill="#3fb950">test_brightness_bounds (tests.test_core.HomeTests.test_brightness_bounds) ... ok</text>
-<text x="14" y="416" fill="#3fb950">test_corrupt_state_file_is_ignored (tests.test_core.HomeTests.test_corrupt_state_file_is_ignored) ... ok</text>
-<text x="14" y="434" fill="#3fb950">test_persistence (tests.test_core.HomeTests.test_persistence) ... ok</text>
-<text x="14" y="452" fill="#3fb950">test_target_bounds (tests.test_core.HomeTests.test_target_bounds) ... ok</text>
-<text x="14" y="470" fill="#3fb950">test_unknown_device (tests.test_core.HomeTests.test_unknown_device) ... ok</text>
-<text x="14" y="488" fill="#3fb950">test_defaults_and_auth (tests.test_core.UserStoreTests.test_defaults_and_auth) ... ok</text>
-<text x="14" y="506" fill="#3fb950">test_users_file_is_private (tests.test_core.UserStoreTests.test_users_file_is_private) ... ok</text>
-<text x="14" y="524" fill="#3fb950">test_turkish_characters (tests.test_nlu.NormalizeTests.test_turkish_characters) ... ok</text>
-<text x="14" y="542" fill="#3fb950">test_bedroom_with_suffix (tests.test_nlu.ParseTests.test_bedroom_with_suffix) ... ok</text>
-<text x="14" y="560" fill="#e6edf3">... (32 lines omitted) ...</text>
-<text x="14" y="578" fill="#3fb950">test_add_remove_rotate (tests.test_schedule.UserStoreTests.test_add_remove_rotate) ... ok</text>
-<text x="14" y="596" fill="#e6edf3">test_users_cli_never_lists_tokens (tests.test_schedule.UserStoreTests.test_users_cli_never_lists_tokens) .....</text>
-<text x="14" y="614" fill="#e6edf3">test_api_requires_token (tests.test_server.ServerTests.test_api_requires_token) ... /usr/lib/python3.14/tem...</text>
-<text x="14" y="632" fill="#d29922">  _warnings.warn(self.warn_message, ResourceWarning)</text>
-<text x="14" y="650" fill="#3fb950">ok</text>
-<text x="14" y="668" fill="#e6edf3">test_bad_bodies (tests.test_server.ServerTests.test_bad_bodies) ... /usr/lib/python3.14/tempfile.py:484: Re...</text>
-<text x="14" y="686" fill="#d29922">  _warnings.warn(self.warn_message, ResourceWarning)</text>
-<text x="14" y="704" fill="#3fb950">ok</text>
-<text x="14" y="722" fill="#3fb950">test_command_roundtrip (tests.test_server.ServerTests.test_command_roundtrip) ... ok</text>
-<text x="14" y="740" fill="#3fb950">test_devices_and_me (tests.test_server.ServerTests.test_devices_and_me) ... ok</text>
-<text x="14" y="758" fill="#3fb950">test_family_cannot_unlock_over_api (tests.test_server.ServerTests.test_family_cannot_unlock_over_api) ... ok</text>
-<text x="14" y="776" fill="#3fb950">test_index_page_is_public (tests.test_server.ServerTests.test_index_page_is_public) ... ok</text>
-<text x="14" y="794" fill="#e6edf3">test_log_is_admin_only (tests.test_server.ServerTests.test_log_is_admin_only) ... /usr/lib/python3.14/tempf...</text>
-<text x="14" y="812" fill="#d29922">  _warnings.warn(self.warn_message, ResourceWarning)</text>
-<text x="14" y="830" fill="#3fb950">ok</text>
-<text x="14" y="848" fill="#e6edf3">test_non_ascii_token_gets_401_not_a_dropped_connection (tests.test_server.ServerTests.test_non_ascii_token_...</text>
-<text x="14" y="866" fill="#3fb950">test_oversized_body_rejected (tests.test_server.ServerTests.test_oversized_body_rejected) ... ok</text>
-<text x="14" y="884" fill="#e6edf3">test_schedule_api (tests.test_server.ServerTests.test_schedule_api) ... /usr/lib/python3.14/tempfile.py:484...</text>
-<text x="14" y="902" fill="#d29922">  _warnings.warn(self.warn_message, ResourceWarning)</text>
-<text x="14" y="920" fill="#3fb950">ok</text>
-<text x="14" y="938" fill="#3fb950">test_security_headers (tests.test_server.ServerTests.test_security_headers) ... ok</text>
-<text x="14" y="956" fill="#e6edf3">test_server_header_hides_python_version (tests.test_server.ServerTests.test_server_header_hides_python_vers...</text>
-<text x="14" y="974" fill="#3fb950">test_unknown_path (tests.test_server.ServerTests.test_unknown_path) ... ok</text>
-<text x="14" y="992" fill="#e6edf3"></text>
-<text x="14" y="1010" fill="#8b949e">----------------------------------------------------------------------</text>
-<text x="14" y="1028" fill="#e6edf3">Ran 74 tests in 0.549s</text>
-<text x="14" y="1046" fill="#e6edf3"></text>
-<text x="14" y="1064" fill="#3fb950">OK</text>
+<text x="14" y="236" fill="#8b949e">   … 53 more lines …</text>
+<text x="14" y="254" fill="#e6edf3">  _warnings.warn(self.warn_message, ResourceWarning)</text>
+<text x="14" y="272" fill="#3fb950">ok</text>
+<text x="14" y="290" fill="#e6edf3">test_bad_bodies (tests.test_server.ServerTests.test_bad_bodies) ... /usr/lib/python3.14/tempfile.py:484…</text>
+<text x="14" y="308" fill="#e6edf3">  _warnings.warn(self.warn_message, ResourceWarning)</text>
+<text x="14" y="326" fill="#3fb950">ok</text>
+<text x="14" y="344" fill="#3fb950">test_command_roundtrip (tests.test_server.ServerTests.test_command_roundtrip) ... ok</text>
+<text x="14" y="362" fill="#3fb950">test_devices_and_me (tests.test_server.ServerTests.test_devices_and_me) ... ok</text>
+<text x="14" y="380" fill="#e6edf3">test_family_cannot_unlock_over_api (tests.test_server.ServerTests.test_family_cannot_unlock_over_api) .…</text>
+<text x="14" y="398" fill="#3fb950">test_index_page_is_public (tests.test_server.ServerTests.test_index_page_is_public) ... ok</text>
+<text x="14" y="416" fill="#e6edf3">test_log_is_admin_only (tests.test_server.ServerTests.test_log_is_admin_only) ... /usr/lib/python3.14/t…</text>
+<text x="14" y="434" fill="#e6edf3">  _warnings.warn(self.warn_message, ResourceWarning)</text>
+<text x="14" y="452" fill="#3fb950">ok</text>
+<text x="14" y="470" fill="#e6edf3">test_non_ascii_token_gets_401_not_a_dropped_connection (tests.test_server.ServerTests.test_non_ascii_to…</text>
+<text x="14" y="488" fill="#3fb950">test_oversized_body_rejected (tests.test_server.ServerTests.test_oversized_body_rejected) ... ok</text>
+<text x="14" y="506" fill="#e6edf3">test_schedule_api (tests.test_server.ServerTests.test_schedule_api) ... /usr/lib/python3.14/tempfile.py…</text>
+<text x="14" y="524" fill="#e6edf3">  _warnings.warn(self.warn_message, ResourceWarning)</text>
+<text x="14" y="542" fill="#3fb950">ok</text>
+<text x="14" y="560" fill="#3fb950">test_security_headers (tests.test_server.ServerTests.test_security_headers) ... ok</text>
+<text x="14" y="578" fill="#e6edf3">test_server_header_hides_python_version (tests.test_server.ServerTests.test_server_header_hides_python_…</text>
+<text x="14" y="596" fill="#3fb950">test_unknown_path (tests.test_server.ServerTests.test_unknown_path) ... ok</text>
+<text x="14" y="614" fill="#e6edf3">test_daily_job_stays_at_07_00_across_dst_changes (tests.test_users.DailyJobsKeepWallClockTime.test_dail…</text>
+<text x="14" y="632" fill="#e6edf3">test_long_downtime_runs_once_and_lands_in_the_future (tests.test_users.DailyJobsKeepWallClockTime.test_…</text>
+<text x="14" y="650" fill="#e6edf3">test_scheduler_reschedules_with_wall_clock (tests.test_users.DailyJobsKeepWallClockTime.test_scheduler_…</text>
+<text x="14" y="668" fill="#e6edf3">test_added_user_can_log_in_without_restart (tests.test_users.RunningServerSeesCliChanges.test_added_use…</text>
+<text x="14" y="686" fill="#e6edf3">test_corrupt_file_at_start_is_a_clear_error_and_is_not_overwritten (tests.test_users.RunningServerSeesC…</text>
+<text x="14" y="704" fill="#e6edf3">test_corrupt_file_while_running_denies_everyone (tests.test_users.RunningServerSeesCliChanges.test_corr…</text>
+<text x="14" y="722" fill="#e6edf3">test_file_is_private_and_written_atomically (tests.test_users.RunningServerSeesCliChanges.test_file_is_…</text>
+<text x="14" y="740" fill="#e6edf3">test_removed_user_is_gone_for_the_server_and_its_schedules (tests.test_users.RunningServerSeesCliChange…</text>
+<text x="14" y="758" fill="#e6edf3">test_rotated_token_stops_working_in_the_running_server (tests.test_users.RunningServerSeesCliChanges.te…</text>
+<text x="14" y="776" fill="#e6edf3">test_server_change_does_not_lose_a_cli_change (tests.test_users.RunningServerSeesCliChanges.test_server…</text>
+<text x="14" y="794" fill="#e6edf3"></text>
+<text x="14" y="812" fill="#e6edf3">----------------------------------------------------------------------</text>
+<text x="14" y="830" fill="#e6edf3">Ran 84 tests in 0.561s</text>
+<text x="14" y="848" fill="#e6edf3"></text>
+<text x="14" y="866" fill="#3fb950">OK</text>
 </g></svg>
