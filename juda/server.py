@@ -199,8 +199,8 @@ def users_command(argv: list[str]) -> int:
     rot.add_argument("name")
     args = parser.parse_args(argv)
 
-    store = UserStore(os.path.join(args.data_dir, "users.json"))
     try:
+        store = UserStore(os.path.join(args.data_dir, "users.json"))
         if args.cmd == "list":
             for name, role in store.roles().items():
                 print(f"{name:<20} {role}")
@@ -227,7 +227,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--data-dir", default=os.environ.get("JUDA_DATA_DIR", "data"))
     args = parser.parse_args(argv)
 
-    assistant, users = build_assistant(args.data_dir)
+    try:
+        assistant, users = build_assistant(args.data_dir)
+    except ValueError as exc:
+        print(f"Hata: {exc}", file=sys.stderr)
+        return 2
     if users.created_defaults:
         # Tokens are shown once, on first run only (afterwards: `users rotate NAME`).
         print("İlk çalıştırma: kullanıcılar oluşturuldu. Tokenlar yalnızca şimdi gösteriliyor:")

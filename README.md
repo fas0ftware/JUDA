@@ -1,7 +1,7 @@
 # JUDA
 
 [![CI](https://github.com/fas0ftware/JUDA/actions/workflows/ci.yml/badge.svg)](https://github.com/fas0ftware/JUDA/actions/workflows/ci.yml)
-![Version](https://img.shields.io/badge/version-0.2.0-blue)
+![Version](https://img.shields.io/badge/version-0.2.1-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-yellow)
 ![Dependencies](https://img.shields.io/badge/dependencies-none%20(stdlib)-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -25,7 +25,7 @@ On first run, `data/users.json` is created and an access token for each user is 
 ```bash
 python3 -m juda users list                 # names and roles (never tokens)
 python3 -m juda users add cocuk guest      # new user, prints its token once
-python3 -m juda users rotate aile          # new token, the old one stops working at once
+python3 -m juda users rotate aile          # new token, the old one stops working at once (also in a running server)
 python3 -m juda users remove cocuk         # the last admin cannot be removed
 ```
 
@@ -52,7 +52,7 @@ The assistant understands Turkish commands:
 
 ### Scheduling
 
-Only device commands and scenes can be scheduled. Permissions are checked twice: when the schedule is created and again when it runs, with the user's role **at that moment**. If a user is demoted or removed in the meantime, their pending jobs no longer act with the old rights. Schedules survive restarts (`data/schedules.json`); a daily job that was missed during downtime runs once, not once per missed day. Family and guest users see and cancel only their own schedules; the admin sees all of them.
+Only device commands and scenes can be scheduled. Permissions are checked twice: when the schedule is created and again when it runs, with the user's role **at that moment**. If a user is demoted or removed in the meantime, their pending jobs no longer act with the old rights. Schedules survive restarts (`data/schedules.json`); a daily job that was missed during downtime runs once, not once per missed day, and daily jobs keep their clock time across daylight-saving changes. Family and guest users see and cancel only their own schedules; the admin sees all of them.
 
 ## Roles
 
@@ -82,7 +82,7 @@ API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `PO
 
 ## Security notes
 
-- Tokens are random (192 bit), compared in constant time, and stored in `data/users.json` with file mode `0600`. A malformed token, including one with non-ASCII characters, simply gets `401`.
+- Tokens are random (192 bit), compared in constant time, and stored in `data/users.json` with file mode `0600`. The file is written atomically, and a running server re-reads it when it changes, so `users rotate` / `users remove` take effect immediately. If the file becomes unreadable while the server runs, every login is refused until it is fixed. A malformed token, including one with non-ASCII characters, simply gets `401`.
 - Request bodies are limited to 64 KB.
 - Every response carries `X-Content-Type-Options`, `X-Frame-Options` and `Referrer-Policy`; the UI page also carries a `Content-Security-Policy` that only allows the page's own script and requests to the same server.
 - The `Server` header does not reveal the Python version; tokens are printed only on creation or rotation.
@@ -95,7 +95,7 @@ API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `PO
 python3 -m unittest discover -s tests -t .
 ```
 
-74 tests: the Turkish parser, permissions, scenes, the HTTP API (auth, limits, headers), time expressions, the scheduler (persistence, missed daily jobs, corrupt files, limits), permission re-checks at run time, and user management. GitHub Actions runs them on Python 3.10–3.13, plus bandit.
+84 tests: the Turkish parser, permissions, scenes, the HTTP API (auth, limits, headers), time expressions, the scheduler (persistence, missed daily jobs, corrupt files, limits), permission re-checks at run time, user management, and changes made with the `users` command reaching a running server. GitHub Actions runs them on Python 3.10–3.13, plus bandit.
 
 ![Test results](docs/test-results.svg)
 
@@ -109,6 +109,8 @@ python3 -m unittest discover -s tests -t .
 - It runs over plain HTTP; access from outside the home would require TLS and a reverse proxy.
 
 ## Changelog
+
+- **0.2.1** – Fixes: `users rotate` / `users remove` now take effect in a running server (before, the old token kept working until a restart, and a removed user's schedules still ran); `users.json` is written atomically and a corrupt file gives a clear error instead of a traceback; daily schedules keep their clock time across daylight-saving changes.
 
 - **0.2.0** – Scheduling (clock time, relative, daily; list/cancel by voice, API and UI), permission re-check when jobs run, `users` command (add/list/remove/rotate), tokens printed only once, Python version hidden from the `Server` header, schedules panel in the UI, more tests, CI with bandit.
 - **0.1.0** – Turkish commands for simulated lights, AC, lock and plug; scenes; roles; token auth; phone UI; Daedalus handoff stub.

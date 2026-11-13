@@ -72,6 +72,22 @@ def next_occurrence(now: float, hour: int, minute: int) -> float:
     return target.timestamp()
 
 
+def next_daily(previous: float, now: float) -> float:
+    """Aynı yerel saat:dakikanın `now`dan sonraki ilk tekrarı.
+
+    24 saat eklemek yaz saati geçişinde saati bir saat kaydırırdı; burada
+    yerel takvim günü ilerletilir ve saat:dakika korunur.
+    """
+    first = dt.datetime.fromtimestamp(previous)
+    hour, minute = first.hour, first.minute
+    day = dt.datetime.fromtimestamp(max(previous, now)).date()
+    while True:
+        candidate = dt.datetime(day.year, day.month, day.day, hour, minute).timestamp()
+        if candidate > now:
+            return candidate
+        day += dt.timedelta(days=1)
+
+
 def _tidy(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip(" ,.;")
 
@@ -128,9 +144,14 @@ class Scheduler:
         directory = os.path.dirname(self._path) or "."
         os.makedirs(directory, exist_ok=True)
         fd, tmp = tempfile.mkstemp(dir=directory, prefix=".schedules-")
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            json.dump({"jobs": [asdict(j) for j in self._jobs.values()]}, fh, ensure_ascii=False, indent=2)
-        os.replace(tmp, self._path)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                json.dump({"jobs": [asdict(j) for j in self._jobs.values()]}, fh, ensure_ascii=False, indent=2)
+            os.replace(tmp, self._path)
+        except BaseException:
+            if os.path.exists(tmp):
+                os.unlink(tmp)
+            raise
 
     # --- işlemler ---------------------------------------------------------
     def add(self, user: str, role: str, text: str, spec: TimeSpec) -> Job:
@@ -176,8 +197,9 @@ class Scheduler:
                     continue
                 due.append(Job(**asdict(job)))
                 if job.daily:
-                    while job.at <= now:  # uzun bir kesintiden sonra kaçırılanları tekrarlama
-                        job.at += 24 * 3600
+                    # Uzun bir kesintiden sonra kaçırılanları tekrarlama. Bir sonraki
+                    # çalışma yerel saatle aynı saat:dakikadır (yaz saati geçişinde de).
+                    job.at = next_daily(job.at, now)
                 else:
                     del self._jobs[job.id]
             if due:
