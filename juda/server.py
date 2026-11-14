@@ -23,6 +23,10 @@ from .users import ROLES, User, UserStore, can_view_log
 
 STATIC_DIR = Path(__file__).parent / "static"
 MAX_BODY = 64 * 1024
+# Bağlanıp hiçbir şey göndermeyen (ya da çok yavaş gönderen) bir istemci, zaman aşımı
+# olmadan bir iş parçacığını sonsuza kadar tutar; ağa açıkken (--host 0.0.0.0) birkaç yüz
+# sessiz bağlantı sunucuyu tüketebilir. Bu süre boyunca sessiz kalan bağlantı kapatılır.
+REQUEST_TIMEOUT = 15
 
 # Her yanıta eklenir: tarayıcının içeriği tahmin etmesini, sayfanın çerçeveye
 # alınmasını ve adresin başka sitelere sızmasını engeller.
@@ -54,6 +58,7 @@ def make_handler(assistant: Assistant, users: UserStore):
     class Handler(BaseHTTPRequestHandler):
         server_version = f"JUDA/{__version__}"
         sys_version = ""  # do not advertise the Python version in the Server header
+        timeout = REQUEST_TIMEOUT  # socket timeout per connection (StreamRequestHandler)
 
         def version_string(self):
             return self.server_version

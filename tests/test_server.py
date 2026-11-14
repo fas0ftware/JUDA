@@ -140,3 +140,29 @@ class ServerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SilentClientsAreDropped(unittest.TestCase):
+    """A client that connects and says nothing must not hold a server thread forever."""
+
+    def test_idle_connection_is_closed_after_the_timeout(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            assistant, users = build_assistant(tmp)
+            handler = make_handler(assistant, users)
+            handler.timeout = 0.5
+            server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+            threading.Thread(target=server.serve_forever, daemon=True).start()
+            try:
+                with socket.create_connection(server.server_address) as idle:
+                    idle.settimeout(5)
+                    self.assertEqual(idle.recv(1), b"")  # closed by the server, not by our 5 s limit
+            finally:
+                server.shutdown()
+                server.server_close()
+
+    def test_default_timeout_is_set(self):
+        from juda.server import REQUEST_TIMEOUT
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(make_handler(*build_assistant(tmp)).timeout, REQUEST_TIMEOUT)
+            self.assertGreater(REQUEST_TIMEOUT, 0)
+
