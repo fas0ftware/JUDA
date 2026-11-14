@@ -95,7 +95,7 @@ API: `GET /api/me`, `GET /api/devices`, `POST /api/command {"text": "..."}`, `PO
 python3 -m unittest discover -s tests -t .
 ```
 
-84 tests: the Turkish parser, permissions, scenes, the HTTP API (auth, limits, headers), time expressions, the scheduler (persistence, missed daily jobs, corrupt files, limits), permission re-checks at run time, user management, and changes made with the `users` command reaching a running server. GitHub Actions runs them on Python 3.10–3.13, plus bandit.
+86 tests: the Turkish parser, permissions, scenes, the HTTP API (auth, limits, headers), time expressions, the scheduler (persistence, missed daily jobs, corrupt files, limits), permission re-checks at run time, user management, and changes made with the `users` command reaching a running server. GitHub Actions runs them on Python 3.10–3.13, plus bandit.
 
 ![Test results](docs/test-results.svg)
 
