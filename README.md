@@ -1,7 +1,7 @@
 # JUDA
 
 [![CI](https://github.com/fas0ftware/JUDA/actions/workflows/ci.yml/badge.svg)](https://github.com/fas0ftware/JUDA/actions/workflows/ci.yml)
-![Version](https://img.shields.io/badge/version-0.2.1-blue)
+![Version](https://img.shields.io/badge/version-0.2.2-blue)
 ![Python](https://img.shields.io/badge/python-3.10%2B-yellow)
 ![Dependencies](https://img.shields.io/badge/dependencies-none%20(stdlib)-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-green)
@@ -109,6 +109,8 @@ python3 -m unittest discover -s tests -t .
 - It runs over plain HTTP; access from outside the home would require TLS and a reverse proxy.
 
 ## Changelog
+
+- **0.2.2** – Connections that stay silent for 15 seconds are closed. Before, a client that connected and sent nothing kept a server thread forever: 200 such connections from a device on the network meant 200 stuck threads (measured), enough to wear the server down when it listens on `0.0.0.0`.
 
 - **0.2.1** – Fixes: `users rotate` / `users remove` now take effect in a running server (before, the old token kept working until a restart, and a removed user's schedules still ran); `users.json` is written atomically and a corrupt file gives a clear error instead of a traceback; daily schedules keep their clock time across daylight-saving changes.
 
